@@ -180,13 +180,21 @@ impl Matrix4 {
 
 impl ops::Add <&Matrix4> for Matrix4 {
     type Output = Matrix4;
+    
+    fn add(self, other: &Matrix4) -> Matrix4 { // REVISED: REMOVED .map()
+        let mut ans: Vec <Vec <f64> > = vec![
+            vec![0.0, 0.0, 0.0, 0.0],
+            vec![0.0, 0.0, 0.0, 0.0],
+            vec![0.0, 0.0, 0.0, 0.0],
+            vec![0.0, 0.0, 0.0, 0.0],
+        ];
 
-    fn add(self, other: &Matrix4) -> Matrix4 {
-        let ans: Vec <Vec <f64> > = self.mat.iter().zip(other.mat).map(
-            |elm| elm.0.iter().zip(elm.1).map(
-                |elm2| elm2.0 + elm2.1
-            ).collect()
-        ).collect();
+        // add each element
+        for i in 0..4 {
+            for j in 0..4 {
+                ans[i][j] = self.mat[i][j] + other.mat[i][j];
+            }
+        }
 
         Self {
             mat: [
@@ -279,13 +287,28 @@ impl ops::Mul <&Vector3> for Matrix4 {
 impl ops::Mul <f64> for Matrix4 {
     type Output = Matrix4;
 
-    fn mul(self, other: f64) -> Matrix4 {
+    fn mul(self, other: f64) -> Matrix4 { // REVISED: REMOVED .map()
+        let mut ans: Vec <Vec <f64> > = vec![
+            vec![0.0, 0.0, 0.0, 0.0],
+            vec![0.0, 0.0, 0.0, 0.0],
+            vec![0.0, 0.0, 0.0, 0.0],
+            vec![0.0, 0.0, 0.0, 0.0],
+        ];
+
+        // mul each element
+        for i in 0..4 {
+            for j in 0..4 {
+                ans[i][j] = self.mat[i][j] * other;
+            }
+        }
+
         Self {
-            mat: self.mat.map(
-                |elm| elm.map(
-                    |elm2| elm2 * other
-                )
-            )
+            mat: [
+                [ans[0][0], ans[0][1], ans[0][2], ans[0][3]],
+                [ans[1][0], ans[1][1], ans[1][2], ans[1][3]],
+                [ans[2][0], ans[2][1], ans[2][2], ans[2][3]],
+                [ans[3][0], ans[3][1], ans[3][2], ans[3][3]],
+            ],
         }
     }
 }

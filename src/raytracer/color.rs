@@ -102,11 +102,12 @@ pub fn get_color(ray: Ray, scene: &Scene, intersect_pt: IntersectData, lights: &
                 acc + &get_light_intensity(light_dir_i, d.color, vec_norm, half_vec_i, material.diffuse, material.specular, material.shininess)
             },
             LightType::Point(p) => {
+                let p_position_sub_intersect_pt = p.position - &intersect_pt.coords;
                 if !test_shadows(intersect_pt, p.position, scene) {
-                    let light_dist = (p.position - &intersect_pt.coords).len();
+                    let light_dist = p_position_sub_intersect_pt.len();
                     let attenuation = 1.0 / (lights.attenuation[0] + lights.attenuation[1] * light_dist + lights.attenuation[2] * light_dist * light_dist);
 
-                    let light_dir_i = (p.position - &intersect_pt.coords).norm();
+                    let light_dir_i = p_position_sub_intersect_pt.norm();
                     let half_vec_i = (light_dir_i + &eye_dir).norm();
 
                     acc + &(get_light_intensity(light_dir_i, p.color, vec_norm, half_vec_i, material.diffuse, material.specular, material.shininess) * attenuation)
@@ -137,7 +138,9 @@ fn test_shadows(intersect_pt: IntersectData, light_pos: Point3, scene: &Scene) -
                 
                 if let Some(id) = d.intersect(&ray) {
                     // Check if intersected surface is beyond the light source
-                    if (id.coords - &ray.position).dot(&(id.coords - &ray.position)).abs() > (light_pos - &ray.position).dot(&(light_pos - &ray.position)).abs() {
+                    let id_coord_sub_ray_position = id.coords - &ray.position;
+                    let light_pos_sub_ray_position = light_pos - &ray.position;
+                    if id_coord_sub_ray_position.dot(&id_coord_sub_ray_position).abs() > light_pos_sub_ray_position.dot(&light_pos_sub_ray_position).abs() {
                         continue;
                     }
                     else {

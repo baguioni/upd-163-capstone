@@ -40,11 +40,16 @@ impl Vector3 {
         *(&self.dot(&self).sqrt())
     }
 
-    pub fn norm(&self) -> Vector3 {
+    pub fn norm(&self) -> Vector3 { // REVISED: REMOVED .map()
+        let mut ans: Vec<f64> = vec![0.0, 0.0, 0.0];
         let vec_len = self.len();
 
+        ans[0] = self.vec[0] / vec_len;
+        ans[1] = self.vec[1] / vec_len;
+        ans[2] = self.vec[2] / vec_len;
+
         Self {
-            vec: self.vec.map(|elm| elm / vec_len)
+            vec: [ans[0], ans[1], ans[2]]
         }
     }
 }
@@ -52,8 +57,13 @@ impl Vector3 {
 impl ops::Add <&Vector3> for Vector3 {
     type Output = Vector3;
 
-    fn add(self, other: &Vector3) -> Vector3 {
-        let ans: Vec <f64> = self.vec.into_iter().zip(other.vec).map(|elm| elm.0 + elm.1).collect();
+    fn add(self, other: &Vector3) -> Vector3 {  // REVISED: REMOVED .map()
+        let mut ans: Vec <f64> = vec![0.0, 0.0, 0.0];
+
+        // add each element
+        ans[0] = self.vec[0] + other.vec[0];
+        ans[1] = self.vec[1] + other.vec[1];
+        ans[2] = self.vec[2] + other.vec[2];
         
         Self {
             vec: [ans[0], ans[1], ans[2]],
@@ -72,8 +82,13 @@ impl ops::Sub <&Vector3> for Vector3 {
 impl ops::Mul <&Vector3> for Vector3 {
     type Output = Vector3;
 
-    fn mul(self, other: &Vector3) -> Vector3 {
-        let ans: Vec <f64> = self.vec.into_iter().zip(other.vec).map(|elm| elm.0 * elm.1).collect();
+    fn mul(self, other: &Vector3) -> Vector3 {  // REVISED: REMOVED .map()
+        let mut ans: Vec <f64> = vec![0.0, 0.0, 0.0];
+
+        // mul each element
+        ans[0] = self.vec[0] * other.vec[0];
+        ans[1] = self.vec[1] * other.vec[1];
+        ans[2] = self.vec[2] * other.vec[2];
         
         Self {
             vec: [ans[0], ans[1], ans[2]],
@@ -84,9 +99,16 @@ impl ops::Mul <&Vector3> for Vector3 {
 impl ops::Mul <f64> for Vector3 {
     type Output = Vector3;
 
-    fn mul(self, other: f64) -> Vector3 {
+    fn mul(self, other: f64) -> Vector3 { // REVISED: REMOVED .map()
+        let mut ans: Vec <f64> = vec![0.0, 0.0, 0.0];
+        
+        // mul each element
+        ans[0] = self.vec[0] * other;
+        ans[1] = self.vec[1] * other;
+        ans[2] = self.vec[2] * other;
+
         Self {
-            vec: self.vec.map(|elm| elm * other),
+            vec: [ans[0], ans[1], ans[2]]
         }
     }
 }

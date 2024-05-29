@@ -9,30 +9,33 @@ pub trait Intersectable {
 impl Intersectable for Triangle {
     fn intersect(&self, ray: &Ray) -> Option <IntersectData> {
         let ray_trans = self.transform.mat_invtf_ray(&ray);
+        let ray_trans_direction = ray_trans.direction;
+        let ray_trans_position = ray_trans.position;
         let [a, b, c] = self.vertices; // Assignment for convenience
         let tri_norm = (b - &a).cross(&(c - &a));
         let tri_norm_u1 = tri_norm.norm();
-        let divisor = ray_trans.direction.dot(&tri_norm_u1);
+        let divisor = ray_trans_direction.dot(&tri_norm_u1);
 
         // Check intersection point
         if ((divisor * 1000000.0).abs() as isize) < 1 {
             return None;
         }
 
-        let intersect = ((a - &ray_trans.position).dot(&tri_norm_u1)) / divisor;
+        let intersect = ((a - &ray_trans_position).dot(&tri_norm_u1)) / divisor;
 
         if intersect < 1e-7 {
             return None;
         }
 
-        let intersect_pt = ray_trans.position + &(ray_trans.direction * intersect);
+        let intersect_pt = ray_trans_position + &(ray_trans_direction * intersect);
 
         // Check barycentric coordinates. They're always positive
         let norm_a = (c - &b).cross(&(intersect_pt - &b));
         let norm_b = (a - &c).cross(&(intersect_pt - &c));
 
-        let alpha = tri_norm.dot(&norm_a) / tri_norm.dot(&tri_norm);
-        let beta = tri_norm.dot(&norm_b) / tri_norm.dot(&tri_norm);
+        let tri_norm_dot = tri_norm.dot(&tri_norm);
+        let alpha = tri_norm.dot(&norm_a) / tri_norm_dot;
+        let beta = tri_norm.dot(&norm_b) / tri_norm_dot;
         let gamma = 1.0 - alpha - beta;
         
         let a_eps = (alpha * 1000000.0) as isize;
@@ -56,11 +59,14 @@ impl Intersectable for Triangle {
 
 impl Intersectable for Sphere {
     fn intersect(&self, ray: &Ray) -> Option <IntersectData> {
-        let ray_trans = self.transform.mat_invtf_ray(&ray);
+        let transform_mat = self.transform;
+        let ray_trans = transform_mat.mat_invtf_ray(&ray);
+        let ray_trans_direction = ray_trans.direction;
+        let ray_trans_position = ray_trans.position;
         let center_pos = ray_trans.position - &self.center;
 
-        let a = ray_trans.direction.dot(&ray_trans.direction);
-        let b = ray_trans.direction.dot(&center_pos) * 2.0;
+        let a = ray_trans_direction.dot(&ray_trans_direction);
+        let b = ray_trans_direction.dot(&center_pos) * 2.0;
         let c = center_pos.dot(&center_pos) - (self.radius * self.radius);
         let discriminant = (b * b) - (4.0 * a * c);
 
@@ -84,7 +90,7 @@ impl Intersectable for Sphere {
 
         Some(IntersectData {
             index: 0,
-            coords: self.transform * &(ray_trans.position + &(ray_trans.direction * inter_t)),
+            coords: transform_mat * &(ray_trans_position + &(ray_trans_direction * inter_t)),
             shape: ShapeType::Sphere(*self),
         })
     }
@@ -93,13 +99,14 @@ impl Intersectable for Sphere {
 pub fn intersect_scene_from_view(ray: Ray, scene: &Scene) -> Option <IntersectData> {
     let mut min_dist = 1000000.0; // Let initial minimum distance be at infinity (10^6)
     let mut nearest_shape = IntersectData::new();
+    let ray_pos = ray.position;
 
     // Iterate through each object and check lesser t
     for (i, each_shape) in scene.shapes.0.iter().enumerate() {
         match each_shape {
             ShapeType::Sphere(s) => {
                 if let Some(mut intersect_data) = s.intersect(&ray) {
-                    let vec_dist = (ray.position - &intersect_data.coords).len();
+                    let vec_dist = (ray_pos - &intersect_data.coords).len();
 
                     intersect_data.index = i;
 
@@ -111,7 +118,7 @@ pub fn intersect_scene_from_view(ray: Ray, scene: &Scene) -> Option <IntersectDa
             },
             ShapeType::Triangle(t) => {
                 if let Some(mut intersect_data) = t.intersect(&ray) {
-                    let vec_dist = (ray.position - &intersect_data.coords).len();
+                    let vec_dist = (ray_pos - &intersect_data.coords).len();
 
                     intersect_data.index = i;
 

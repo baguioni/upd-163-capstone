@@ -11,6 +11,7 @@ debug = true
 [dependencies]
 ndarray = { version = "0.15.0", features = ["rayon"] }
 image = "0.24.6"
+rayon = "1.7" 
 
 [dev-dependencies]
 criterion = { version = "0.4", features = ["html_reports"]}
